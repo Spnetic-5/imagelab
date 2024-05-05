@@ -1,6 +1,8 @@
 const PROCESS_OPERATIONS = {
   READIMAGE: "basic_readimage",
   WRITEIMAGE: "basic_writeimage",
+  READVIDEO: "basic_readvideo",
+  WRITEVIDEO: "basic_writevideo",
   REFLECTIMAGE: "geometric_reflectimage",
   ROTATEIMAGE: "geometric_rotateimage",
   AFFINEIMAGE: "geometric_affineimage",
