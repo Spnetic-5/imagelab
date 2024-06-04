@@ -145,7 +145,8 @@ function zoomout() {
  * which are selected by the user
  */
 function executeProcess() {
-  const preview = document.getElementById("image-preview");
+  const preview = mainController.getOriginalVideo();
+  console.log(preview, "EXECUTE");
   try {
     mainController.computeAll(preview);
   } catch (error) {
@@ -199,7 +200,7 @@ function resetWorkspace() {
  */
 function downloadImage() {
   const downloadImage = mainController.getProcessedImage();
-  if(downloadImage != null) {
+  if (downloadImage != null) {
     var link = document.createElement("a");
     link.download = "Processed_image.jpg";
     link.href = downloadImage;
@@ -211,29 +212,63 @@ function downloadImage() {
 
 /**
  * This function loads the selected image and
- * set the image in the main controller
+ * set the image in t`he main controller
  */
 function loadFile() {
-  const preview = document.getElementById("input-image"); // image-preview is the element of image will displayed on the preview pane.
   const file = document.querySelector("input[type=file]").files[0];
+  if (file.name.includes(".mp4")) preview = document.getElementById("input-video");
+  else preview = document.getElementById("input-image");
   const reader = new FileReader();
+  reader.readAsArrayBuffer(file);
   var url = "";
 
-  reader.addEventListener(
-    "load",
-    function () {
-      // convert image file to base64 string
-      url = URL.createObjectURL(file);
 
-      preview.src = url;
-    },
-    false
-  );
+  reader.onload = (event) => {
+    console.log("file merge started");
+
+    let buffer = event.target.result;
+    let videoBlob = new Blob([new Uint8Array(buffer)], { type: 'video/mp4' });
+
+    // convert image file to base64 string
+    url = URL.createObjectURL(videoBlob);
+    console.log(preview);
+    preview.src = url;
+  };
+
+  preview.addEventListener("canplaythrough", () => {
+    console.log(file.name.includes(".mp4"));
+    mainController.setOriginalVideo(preview);
+  });
 
   preview.onload = () => {
+    console.log(file.name.includes(".mp4"));
     // Here preview is the main image
-    mainController.setOriginalImage(preview);
+    if (file.name.includes(".mp4"))
+      mainController.setOriginalVideo(preview);
+    else
+      mainController.setOriginalImage(preview);
   };
+
+  // reader.addEventListener(
+  //   "load",
+  //   function () {
+  //     // convert image file to base64 string
+  //     url = URL.createObjectURL(file);
+  //     console.log(preview);
+  //     preview.src = url;
+  //     // Here preview is the main image
+  //     console.log(file.name.includes(".mp4"), file.name, "PREVIEW");
+  //     if(file.name.includes(".mp4"))
+  //       mainController.setOriginalVideo(preview);  
+  //     else
+  //       mainController.setOriginalImage(preview);
+  //     },
+  //   false
+  // );
+
+  // preview.onload = () => {
+
+  // };
 
   if (file) {
     reader.readAsDataURL(file);

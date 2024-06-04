@@ -1,7 +1,10 @@
 const PROCESS_OPERATIONS = require("../../operations");
 const ReadImage = require("../operator/basic/ReadImage");
 const WriteImage = require("../operator/basic/WriteImage");
+const ReadVideo = require("../operator/basic/ReadVideo");
+const WriteVideo = require("../operator/basic/WriteVideo");
 const GrayImage = require("../operator/convertions/GrayImage");
+const GrayVideo = require("../operator/convertions/GrayVideo");
 const GrayToBinary = require("../operator/convertions/GrayToBinary");
 const Blur = require("../operator/blurring/Blur");
 const GaussianBlur = require("../operator/blurring/GaussianBlur");
@@ -36,10 +39,18 @@ class MainController {
   //Instead of directly exporting the image, the processed image is stored
   #processedImage;
 
+  // This holds the original image added by the user
+  #originalVideo;
+
+  //Instead of directly exporting the image, the processed image is stored
+  #processedVideo;
+
   constructor() {
     this.#appliedOperators = [];
     this.#originalImage = null;
     this.#processedImage = null;
+    this.#originalVideo = null;
+    this.#processedVideo = null;
   }
 
   /**
@@ -95,6 +106,14 @@ class MainController {
   }
 
   /**
+   * This method set the original video
+   * @param {Mat Video} video
+   */
+  setOriginalVideo(video) {
+    this.#originalVideo = video;
+  }
+
+  /**
    * This methods returns the original image
    * @returns Image
    */
@@ -103,10 +122,25 @@ class MainController {
   }
 
   /**
+   * This methods returns the original video
+   * @returns Video
+   */
+  getOriginalVideo() {
+    return this.#originalVideo;
+  }
+
+  /**
    * 
    */
   getProcessedImage() {
     return this.#processedImage;
+  }
+
+  /**
+   * 
+   */
+  getProcessedVideo() {
+    return this.#processedVideo;
   }
 
   /**
@@ -126,9 +160,24 @@ class MainController {
           new WriteImage(PROCESS_OPERATIONS.WRITEIMAGE, id)
         );
         break;
+      case PROCESS_OPERATIONS.READVIDEO:
+        this.#appliedOperators.push(
+          new ReadVideo(PROCESS_OPERATIONS.READVIDEO, id)
+        );
+        break;
+      case PROCESS_OPERATIONS.WRITEVIDEO:
+        this.#appliedOperators.push(
+          new WriteVideo(PROCESS_OPERATIONS.WRITEVIDEO, id)
+        );
+        break;
       case PROCESS_OPERATIONS.GRAYIMAGE:
         this.#appliedOperators.push(
           new GrayImage(PROCESS_OPERATIONS.GRAYIMAGE, id)
+        );
+        break;
+      case PROCESS_OPERATIONS.GRAYVIDEO:
+        this.#appliedOperators.push(
+          new GrayVideo(PROCESS_OPERATIONS.GRAYVIDEO, id)
         );
         break;
       case PROCESS_OPERATIONS.GRAYTOBINARY:
@@ -253,23 +302,33 @@ class MainController {
    * This method compute and generate the output of the selected operators
    */
   computeAll() {
+    console.log("In computeALL", this.#originalVideo, this.#originalImage, this.#processedVideo, this.#processedImage)
     if (this.#appliedOperators.length === 0) {
       throw Error("No operators are added to the workspace");
     }
 
-    if (this.#appliedOperators[0]?.type !== PROCESS_OPERATIONS.READIMAGE) {
-      throw Error("Read Image block is not added");
+    if (this.#appliedOperators[0]?.type !== PROCESS_OPERATIONS.READIMAGE && this.#appliedOperators[0]?.type !== PROCESS_OPERATIONS.READVIDEO) {
+      throw Error("Read Image/Video block is not added");
     }
 
-    if (this.#originalImage === null) {
-      throw Error("Image is not set");
-    }
+    // if (this.#originalImage === null && this.#originalVideo === null) {
+    //   throw Error("Image/Video is not set");
+    // }
+
+    console.log(this.#originalVideo, "OGGGG");
     var image = this.#originalImage;
+    var video = this.#originalVideo;
     this.#appliedOperators.forEach((item) => {
       if (image) {
         image = item.compute(image);
-        if(image) {
+        if (image) {
           this.#processedImage = image;
+        }
+      }
+      else if (video) {
+        video = item.compute(video);
+        if (video) {
+          this.#processedVideo = video;
         }
       }
     });
